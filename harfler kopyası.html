@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arapça Yazılış Kuralları | kidefarapca.com</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #f39c12; /* Turuncu tonu */
+            --bg-color: #fdfbf7;
+            --stroke-color: #2d3436;
+            --shadow-color: #e0e0e0;
+            --track-color: #eee; /* Silik harf rengi */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .letter-display {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 2rem auto;
+            background: #fafafa;
+            border-radius: 15px;
+            border: 2px dashed #ddd;
+        }
+
+        /* SVG Ayarları */
+        svg {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Silik arka plan harfi (yol gösterici) */
+        .bg-path {
+            fill: none;
+            stroke: var(--track-color);
+            stroke-width: 15;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Çizilen asıl harf */
+        .animated-path {
+            fill: none;
+            stroke: var(--primary-color);
+            stroke-width: 15;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            /* Animasyon JS ile kontrol edilecek */
+        }
+
+        /* Noktalar için stil */
+        .dot {
+            fill: var(--primary-color);
+            stroke: none;
+            opacity: 0; /* Başlangıçta gizli */
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .btn-nav {
+            background-color: #eee;
+            color: #333;
+        }
+        
+        .btn-replay {
+            background-color: var(--primary-color);
+            color: white;
+            flex-grow: 1;
+        }
+
+        button:hover { transform: translateY(-2px); }
+        button:active { transform: scale(0.95); }
+
+        .letter-name {
+            font-size: 1.5rem;
+            color: #777;
+            margin-bottom: 0.5rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="letter-name" id="letterName">Elif</div>
+        
+        <div class="letter-display">
+            <svg viewBox="0 0 200 200" id="svgBg">
+                </svg>
+            
+            <svg viewBox="0 0 200 200" id="svgFg">
+                </svg>
+        </div>
+
+        <div class="controls">
+            <button class="btn-nav" id="prevBtn">← Geri</button>
+            <button class="btn-replay" id="replayBtn">Tekrar İzle ↻</button>
+            <button class="btn-nav" id="nextBtn">İleri →</button>
+        </div>
+    </div>
+
+    <script>
+        /* HARF VERİLERİ (SVG Path Data)
+           Buradaki "d" değerleri harfin çizim yolunu belirtir.
+           M = Move to (Kalemi kaldır ve git)
+           Q = Quadratic Curve (Eğri çiz)
+           L = Line (Düz çizgi çiz)
+           
+           ÖNEMLİ: Koordinatlar Arapça yazılış yönüne göre (Sağdan sola / Yukarıdan aşağıya) ayarlandı.
+        */
+        const letters = [
+            {
+                name: "Elif (ا)",
+                // Yukarıdan aşağıya düz bir çizgi
+                paths: ["M 100,40 L 100,160"], 
+                dots: [] 
+            },
+            {
+                name: "Be (ب)",
+                // Sağdan başla, aşağı kavis çiz, sola git, yukarı hafif kıvrıl
+                paths: ["M 160,100 Q 160,140 100,140 Q 40,140 40,110"], 
+                // Nokta (X, Y koordinatı)
+                dots: [{cx: 100, cy: 165, r: 8}] 
+            },
+            {
+                name: "Te (ت)",
+                // Be ile aynı gövde
+                paths: ["M 160,100 Q 160,140 100,140 Q 40,140 40,110"], 
+                // İki nokta üstte
+                dots: [{cx: 85, cy: 70, r: 8}, {cx: 115, cy: 70, r: 8}]
+            },
+            {
+                name: "Se (ث)",
+                // Be ile aynı gövde
+                paths: ["M 160,100 Q 160,140 100,140 Q 40,140 40,110"], 
+                // Üç nokta üstte (üçgen şeklinde)
+                dots: [{cx: 80, cy: 75, r: 8}, {cx: 120, cy: 75, r: 8}, {cx: 100, cy: 50, r: 8}]
+            },
+            {
+                name: "Cim (ج)",
+                // Önce şapka (soldan sağa doğru dalga), sonra karın (yarım daire)
+                // Not: Cim harfinin başı genelde soldan sağa çizilir, sonra geri dönülüp karın çizilir.
+                paths: [
+                    "M 60,60 Q 100,40 140,60", // Şapka
+                    "M 140,60 Q 160,160 100,160 Q 40,160 60,110" // Karın
+                ],
+                dots: [{cx: 100, cy: 110, r: 8}] // Nokta karın içinde
+            }
+        ];
+
+        let currentIndex = 0;
+        const svgBg = document.getElementById('svgBg');
+        const svgFg = document.getElementById('svgFg');
+        const letterNameEl = document.getElementById('letterName');
+
+        function loadLetter(index) {
+            const letter = letters[index];
+            letterNameEl.textContent = letter.name;
+            
+            // SVG içini temizle
+            svgBg.innerHTML = '';
+            svgFg.innerHTML = '';
+
+            // 1. Gövde Yollarını Oluştur (Path)
+            letter.paths.forEach(pathData => {
+                // Arka plan (silik)
+                const bgPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                bgPath.setAttribute("d", pathData);
+                bgPath.setAttribute("class", "bg-path");
+                svgBg.appendChild(bgPath);
+
+                // Ön plan (animasyonlu)
+                const fgPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                fgPath.setAttribute("d", pathData);
+                fgPath.setAttribute("class", "animated-path");
+                fgPath.id = "animPath-" + Math.random().toString(36).substr(2, 9);
+                svgFg.appendChild(fgPath);
+            });
+
+            // 2. Noktaları Oluştur (Circle)
+            letter.dots.forEach(dotData => {
+                const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                dot.setAttribute("cx", dotData.cx);
+                dot.setAttribute("cy", dotData.cy);
+                dot.setAttribute("r", dotData.r);
+                dot.setAttribute("class", "dot");
+                // Noktalar hem arka planda (görünür olsun diye) hem ön planda olabilir
+                // Animasyon sırası gelince görünmesi için ön plana ekliyoruz
+                svgFg.appendChild(dot);
+            });
+
+            // Animasyonu başlat
+            animateLetter();
+        }
+
+        function animateLetter() {
+            const paths = document.querySelectorAll('.animated-path');
+            const dots = document.querySelectorAll('.dot');
+            
+            let delayAccumulator = 0; // Animasyonları sıraya dizmek için gecikme sayacı
+
+            // Önce çizgileri sırayla çiz
+            paths.forEach(path => {
+                const length = path.getTotalLength();
+                
+                // Başlangıç durumu: Çizgi tamamen gizli
+                path.style.transition = 'none';
+                path.style.strokeDasharray = length + ' ' + length;
+                path.style.strokeDashoffset = length;
+                
+                // Reflow (Tarayıcıyı güncellemeye zorla)
+                path.getBoundingClientRect();
+
+                // Animasyon ayarları
+                const duration = 1; // Çizim süresi (saniye)
+                
+                // CSS transition ile animasyonu tetikle
+                // setTimeout kullanarak bir önceki çizginin bitmesini bekliyoruz
+                setTimeout(() => {
+                    path.style.transition = `stroke-dashoffset ${duration}s ease-in-out`;
+                    path.style.strokeDashoffset = '0';
+                }, delayAccumulator * 1000);
+
+                delayAccumulator += duration;
+            });
+
+            // Çizgiler bitince noktaları "pop" diye çıkar
+            dots.forEach(dot => {
+                // Başlangıçta gizle
+                dot.style.transition = 'none';
+                dot.style.opacity = '0';
+                dot.style.transform = 'scale(0)';
+                dot.style.transformOrigin = 'center';
+
+                setTimeout(() => {
+                    dot.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    dot.style.opacity = '1';
+                    dot.style.transform = 'scale(1)';
+                }, delayAccumulator * 1000);
+            });
+        }
+
+        // Buton Dinleyicileri
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentIndex < letters.length - 1) {
+                currentIndex++;
+                loadLetter(currentIndex);
+            }
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadLetter(currentIndex);
+            }
+        });
+
+        document.getElementById('replayBtn').addEventListener('click', () => {
+            animateLetter();
+        });
+
+        // Başlangıç
+        loadLetter(0);
+
+    </script>
+</body>
+</html>

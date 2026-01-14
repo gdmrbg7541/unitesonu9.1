@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arapça Yazı Defteri | kidefarapca.com</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --ink-color: #2c3e50; /* Mürekkep Rengi: Koyu Lacivert */
+            --guide-color: #bdc3c7; /* Kılavuz Çizgi Rengi */
+            --bg-paper: #fdfbf7; /* Hafif krem kağıt rengi */
+            --accent: #e67e22; /* Turuncu vurgular */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* DEFTER GÖRÜNÜMÜ */
+        .notebook-card {
+            background-color: var(--bg-paper);
+            width: 90%;
+            max-width: 400px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+
+        /* ZIMBA DELİKLERİ SÜSÜ */
+        .notebook-card::before {
+            content: '';
+            position: absolute;
+            top: -10px; left: 20px; right: 20px;
+            height: 20px;
+            background-image: radial-gradient(circle, #333 20%, transparent 25%);
+            background-size: 30px 30px;
+            background-position: center;
+            opacity: 0.1;
+        }
+
+        .header h1 {
+            font-family: 'Amiri', serif;
+            font-size: 3.5rem;
+            color: var(--ink-color);
+            margin: 0;
+            line-height: 1.2;
+        }
+        .header p {
+            color: #7f8c8d;
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* ÇİZİM ALANI */
+        .drawing-area {
+            position: relative;
+            width: 280px;
+            height: 200px;
+            margin: 20px auto;
+            border-bottom: 2px solid #eab676; /* Alt satır çizgisi */
+            background-image: linear-gradient(#eab676 1px, transparent 1px);
+            background-size: 100% 50%; /* Ara çizgiler */
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* ÇİZGİ STİLLERİ */
+        .trace-path {
+            fill: none;
+            stroke: #eee; /* Silik yol */
+            stroke-width: 16;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .anim-path {
+            fill: none;
+            stroke: var(--ink-color);
+            stroke-width: 16;
+            stroke-linecap: round; /* Kalem ucu yuvarlaklığı */
+            stroke-linejoin: round;
+            opacity: 1;
+        }
+
+        .dot {
+            fill: var(--accent);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0);
+        }
+        .dot.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* KONTROLLER */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--ink-color);
+        }
+
+        button:hover {
+            border-color: var(--ink-color);
+            background: #fdfdfd;
+            transform: translateY(-2px);
+        }
+
+        button:active { transform: scale(0.95); }
+
+        .btn-replay {
+            background: var(--ink-color);
+            color: white;
+            border-color: var(--ink-color);
+            font-weight: bold;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-replay:hover { background: #34495e; color: white; }
+
+    </style>
+</head>
+<body>
+
+    <div class="notebook-card">
+        <div class="header">
+            <h1 id="dispArabic">ا</h1>
+            <p id="dispLatin">Elif</p>
+        </div>
+
+        <div class="drawing-area">
+            <svg viewBox="0 0 280 200" id="mainSvg"></svg>
+        </div>
+
+        <div class="controls">
+            <button id="prevBtn">❮</button>
+            <button class="btn-replay" id="replayBtn">
+                <span>Tekrar</span>
+                <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            </button>
+            <button id="nextBtn">❯</button>
+        </div>
+    </div>
+
+    <script>
+        // --- BASİTLEŞTİRİLMİŞ KOORDİNATLAR (Hatasız Çizim İçin) ---
+        // Sadece M (Başla), L (Düz Çizgi), Q (Eğri) kullanıldı.
+        
+        const shapes = {
+            elif:   ["M 140,20 L 140,160"], 
+            be:     ["M 220,90 Q 220,150 140,150 Q 60,150 60,110"], 
+            cim:    ["M 80,60 Q 140,30 200,60", "M 200,60 Q 220,180 140,180 Q 60,180 80,120"], 
+            dal:    ["M 160,60 Q 180,50 180,80 Q 180,140 120,160"], 
+            ra:     ["M 160,60 Q 160,120 100,160"], 
+            sin:    ["M 220,80 Q 220,110 200,100", "M 200,100 Q 200,120 180,110", "M 180,110 Q 180,180 120,180 Q 60,180 60,130"], 
+            sad:    ["M 120,130 L 180,130 Q 200,120 180,80 Q 140,80 120,130", "M 120,130 Q 120,180 80,180 Q 40,180 40,130"], 
+            ti:     ["M 120,130 L 180,130 Q 200,120 180,80 Q 140,80 120,130", "M 150,20 L 150,130"], 
+            ayin:   ["M 100,60 Q 180,40 180,90 Q 180,110 140,110", "M 140,110 Q 220,180 140,180 Q 60,180 100,120"], 
+            fe:     ["M 180,80 Q 200,60 180,60 Q 160,60 160,80 Q 160,150 100,150 Q 60,150 60,120"], 
+            kaf:    ["M 180,70 Q 200,50 180,50 Q 160,50 160,70 Q 160,170 110,170 Q 60,170 60,120"], 
+            kef:    ["M 180,30 L 180,130 Q 180,150 80,150", "M 140,60 L 110,90"], 
+            lam:    ["M 180,20 L 180,140 Q 180,180 120,180 Q 80,180 80,130"], 
+            mim:    ["M 160,80 Q 190,70 190,90 Q 190,110 160,100 Q 140,90 140,110 L 140,180"], 
+            nun:    ["M 200,70 Q 200,170 140,170 Q 80,170 80,120"], 
+            he:     ["M 180,60 Q 180,160 130,140 Q 100,140 140,100 Q 160,80 80,140"], 
+            vav:    ["M 140,90 Q 160,70 140,70 Q 120,70 120,90 Q 120,140 70,160"], 
+            ye:     ["M 180,60 Q 140,60 140,100 Q 140,140 180,140 Q 220,140 180,180 Q 120,210 80,160"] 
+        };
+
+        const letters = [
+            { a: "ا", l: "Elif", p: shapes.elif, d: [] },
+            { a: "ب", l: "Be",   p: shapes.be,   d: [{x:140, y:175}] },
+            { a: "ت", l: "Te",   p: shapes.be,   d: [{x:120, y:70}, {x:160, y:70}] },
+            { a: "ث", l: "Se",   p: shapes.be,   d: [{x:120, y:70}, {x:160, y:70}, {x:140, y:40}] },
+            { a: "ج", l: "Cim",  p: shapes.cim,  d: [{x:140, y:140}] },
+            { a: "ح", l: "Ha",   p: shapes.cim,  d: [] },
+            { a: "خ", l: "Hı",   p: shapes.cim,  d: [{x:140, y:30}] },
+            { a: "د", l: "Dal",  p: shapes.dal,  d: [] },
+            { a: "ذ", l: "Zel",  p: shapes.dal,  d: [{x:160, y:40}] },
+            { a: "ر", l: "Ra",   p: shapes.ra,   d: [] },
+            { a: "ز", l: "Ze",   p: shapes.ra,   d: [{x:160, y:40}] },
+            { a: "س", l: "Sin",  p: shapes.sin,  d: [] },
+            { a: "ش", l: "Şın",  p: shapes.sin,  d: [{x:180, y:60}, {x:220, y:60}, {x:200, y:30}] },
+            { a: "ص", l: "Sad",  p: shapes.sad,  d: [] },
+            { a: "ض", l: "Dad",  p: shapes.sad,  d: [{x:160, y:60}] },
+            { a: "ط", l: "Tı",   p: shapes.ti,   d: [] },
+            { a: "ظ", l: "Zı",   p: shapes.ti,   d: [{x:160, y:60}] },
+            { a: "ع", l: "Ayın", p: shapes.ayin, d: [] },
+            { a: "غ", l: "Gayın",p: shapes.ayin, d: [{x:140, y:30}] },
+            { a: "ف", l: "Fe",   p: shapes.fe,   d: [{x:180, y:40}] },
+            { a: "ق", l: "Kaf",  p: shapes.kaf,  d: [{x:160, y:30}, {x:200, y:30}] },
+            { a: "ك", l: "Kef",  p: shapes.kef,  d: [] },
+            { a: "ل", l: "Lam",  p: shapes.lam,  d: [] },
+            { a: "م", l: "Mim",  p: shapes.mim,  d: [] },
+            { a: "ن", l: "Nun",  p: shapes.nun,  d: [{x:140, y:90}] },
+            { a: "هـ",l: "He",   p: shapes.he,   d: [] },
+            { a: "و", l: "Vav",  p: shapes.vav,  d: [] },
+            { a: "ي", l: "Ye",   p: shapes.ye,   d: [{x:140, y:200}, {x:180, y:200}] }
+        ];
+
+        let currentIndex = 0;
+        const mainSvg = document.getElementById('mainSvg');
+        const dispArabic = document.getElementById('dispArabic');
+        const dispLatin = document.getElementById('dispLatin');
+
+        function loadLetter(index) {
+            const letter = letters[index];
+            dispArabic.textContent = letter.a;
+            dispLatin.textContent = letter.l;
+
+            mainSvg.innerHTML = '';
+
+            // 1. Çizgiler (Paths)
+            letter.p.forEach((d, i) => {
+                // Silik arka plan
+                const trace = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                trace.setAttribute("d", d);
+                trace.setAttribute("class", "trace-path");
+                mainSvg.appendChild(trace);
+
+                // Animasyonlu çizgi
+                const anim = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                anim.setAttribute("d", d);
+                anim.setAttribute("class", "anim-path");
+                anim.dataset.index = i; // Sıralama için
+                mainSvg.appendChild(anim);
+            });
+
+            // 2. Noktalar (Dots)
+            letter.d.forEach(dot => {
+                const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                c.setAttribute("cx", dot.x);
+                c.setAttribute("cy", dot.y);
+                c.setAttribute("r", 9);
+                c.setAttribute("class", "dot");
+                mainSvg.appendChild(c);
+            });
+
+            runAnimation();
+        }
+
+        function runAnimation() {
+            const paths = document.querySelectorAll('.anim-path');
+            const dots = document.querySelectorAll('.dot');
+            let delay = 0;
+
+            // Çizgileri sırayla çiz
+            paths.forEach(path => {
+                const length = path.getTotalLength();
+                
+                // Başlangıçta gizle
+                path.style.transition = 'none';
+                path.style.strokeDasharray = length;
+                path.style.strokeDashoffset = length;
+                path.getBoundingClientRect(); // Reflow
+
+                const duration = 0.8; // Çizim hızı (saniye)
+
+                setTimeout(() => {
+                    path.style.transition = `stroke-dashoffset ${duration}s ease-in-out`;
+                    path.style.strokeDashoffset = '0';
+                }, delay * 1000);
+
+                delay += duration;
+            });
+
+            // Çizim bitince noktaları göster
+            setTimeout(() => {
+                dots.forEach(dot => {
+                    dot.classList.add('visible');
+                });
+            }, delay * 1000);
+        }
+
+        // Butonlar
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % letters.length;
+            loadLetter(currentIndex);
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + letters.length) % letters.length;
+            loadLetter(currentIndex);
+        });
+
+        document.getElementById('replayBtn').addEventListener('click', runAnimation);
+
+        // Klavye desteği
+        document.addEventListener('keydown', (e) => {
+            if(e.key === "ArrowRight") document.getElementById('nextBtn').click();
+            if(e.key === "ArrowLeft") document.getElementById('prevBtn').click();
+        });
+
+        // Başlat
+        loadLetter(0);
+
+    </script>
+</body>
+</html>
