@@ -670,26 +670,26 @@
         const activityDataBank = [
             {
                 title: "صَنِّف الكَلِمات: شَمْسِيَّة أَمْ قَمَرِيَّة؟", 
-                categories: ["الْحُروف الشَّمْسِيَّة", "الْحُروف الْقَمَرِيَّة"], 
+                categories: ["الحُروف الشَّمْسِيَّة", "الحُروف القَمَرِيَّة"], 
                 words: [
-                    { w: "تَعَارُفٌ", cat: "الْحُروف الشَّمْسِيَّة" },
-                    { w: "ثَلْجٌ", cat: "الْحُروف الشَّمْسِيَّة" },
-                    { w: "دَفْتَرٌ", cat: "الْحُروف الشَّمْسِيَّة" },
-                    { w: "ذِكْرٌ", cat: "الْحُروف الشَّمْسِيَّة" },
-                    { w: "رُمَّانٌ", cat: "الْحُروف الشَّمْسِيَّة" },
-                    { w: "زَكَاةٌ", cat: "الْحُروف الشَّمْسِيَّة" },
-                    { w: "سَلَامٌ", cat: "الْحُروف الشَّمْسِيَّة" },
-                    { w: "تَحِيَّةٌ", cat: "الْحُروف الشَّمْسِيَّة" },
-                    { w: "صَبَاحٌ", cat: "الْحُروف الشَّمْسِيَّة" },
-                    { w: "أَسَدٌ", cat: "الْحُروف الْقَمَرِيَّة" },
-                    { w: "بَابٌ", cat: "الْحُروف الْقَمَرِيَّة" },
-                    { w: "جَلَالٌ", cat: "الْحُروف الْقَمَرِيَّة" },
-                    { w: "حِسَابٌ", cat: "الْحُروف الْقَمَرِيَّة" },
-                    { w: "خُبْزٌ", cat: "الْحُروف الْقَمَرِيَّة" },
-                    { w: "خَيْرٌ", cat: "الْحُروف الْقَمَرِيَّة" },
-                    { w: "كِتَابٌ", cat: "الْحُروف الْقَمَرِيَّة" },
-                    { w: "حَمْدٌ", cat: "الْحُروف الْقَمَرِيَّة" },
-                    { w: "قَلَمٌ", cat: "الْحُروف الْقَمَرِيَّة" }
+                    { w: "تَعَارُفٌ", cat: "الحُروف الشَّمْسِيَّة" },
+                    { w: "ثَلْجٌ", cat: "الحُروف الشَّمْسِيَّة" },
+                    { w: "دَفْتَرٌ", cat: "الحُروف الشَّمْسِيَّة" },
+                    { w: "ذِكْرٌ", cat: "الحُروف الشَّمْسِيَّة" },
+                    { w: "رُمَّانٌ", cat: "الحُروف الشَّمْسِيَّة" },
+                    { w: "زَكَاةٌ", cat: "الحُروف الشَّمْسِيَّة" },
+                    { w: "سَلَامٌ", cat: "الحُروف الشَّمْسِيَّة" },
+                    { w: "تَحِيَّةٌ", cat: "الحُروف الشَّمْسِيَّة" },
+                    { w: "صَبَاحٌ", cat: "الحُروف الشَّمْسِيَّة" },
+                    { w: "أَسَدٌ", cat: "الحُروف القَمَرِيَّة" },
+                    { w: "بَابٌ", cat: "الحُروف القَمَرِيَّة" },
+                    { w: "جَلَالٌ", cat: "الحُروف القَمَرِيَّة" },
+                    { w: "حِسَابٌ", cat: "الحُروف القَمَرِيَّة" },
+                    { w: "خُبْزٌ", cat: "الحُروف القَمَرِيَّة" },
+                    { w: "خَيْرٌ", cat: "الحُروف القَمَرِيَّة" },
+                    { w: "كِتَابٌ", cat: "الحُروف القَمَرِيَّة" },
+                    { w: "حَمْدٌ", cat: "الحُروف القَمَرِيَّة" },
+                    { w: "قَلَمٌ", cat: "الحُروف القَمَرِيَّة" }
                 ]
             }
         ];
@@ -817,30 +817,31 @@
         }
 
        
-        // --- GELİŞMİŞ METİN DÖNÜŞTÜRME (DÜZELTİLMİŞ) ---
+        // --- GELİŞMİŞ METİN DÖNÜŞTÜRME (GÜNCELLENDİ: Fethalı Elif) ---
         function transformWordText(wordElement, category) {
             let text = wordElement.textContent;
             
             // Eğer zaten "ال" ile başlıyorsa işlem yapma
-            if (text.startsWith("ال")) return;
+            if (text.startsWith("ال") || text.startsWith("اَل")) return;
 
             // 1. ADIM: Sondaki Tenvin'i (Dammatan - u064C) tek Ötreye (Damma - u064F) çevir
-            // ÖNCEKİ HATA: u0645 (Mim Harfi) yazılmıştı. 
-            // DOĞRUSU: u064F (Ötre/Damma)
             text = text.replace(/\u064C$/, '\u064F'); 
 
             // 2. ADIM: Kategoriye göre Elif-Lam ve Şedde/Cezim ekle
             if (category.includes("الشَّمْسِيَّة")) {
-                // ŞEMSİ: "ال" + İlk Harf + Şedde + Kelimenin geri kalanı
+                // ŞEMSİ: "اَل" (Elif+Fetha+Lam) + İlk Harf + Şedde + Kelimenin geri kalanı
+                // Lam okunmaz ama yazılır, Elif fethalı olur.
                 let firstChar = text.charAt(0);
                 let restOfWord = text.slice(1);
                 
                 // Şedde unicode: \u0651
-                wordElement.textContent = "ال" + firstChar + "\u0651" + restOfWord;
+                // BURADA DEĞİŞİKLİK YAPILDI: "ال" yerine "اَل" (Elif üzerinde Fetha)
+                wordElement.textContent = "اَل" + firstChar + "\u0651" + restOfWord;
             } else {
-                // KAMERİ: "ال" + Cezim + Kelime
+                // KAMERİ: "اَلْ" (Elif+Fetha + Lam+Cezim) + Kelime
                 // Cezim unicode: \u0652
-                wordElement.textContent = "ال\u0652" + text;
+                // BURADA DEĞİŞİKLİK YAPILDI: "ال" yerine "اَل" (Elif üzerinde Fetha)
+                wordElement.textContent = "اَل\u0652" + text;
             }
         }
 
