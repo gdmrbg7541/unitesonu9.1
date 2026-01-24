@@ -287,10 +287,15 @@
         }
         
         #arabicOutputDisplay { 
-            font-family: var(--font-harmattan); font-weight: 700; line-height: 1.3; 
+            font-family: var(--font-harmattan); font-weight: 700; line-height: 1.5; 
             direction: rtl; font-size: 5.5rem; color: var(--color-text-primary); 
             white-space: nowrap;
             overflow-x: auto;
+            /* Harfin altından kesilmesini engellemek için alt boşluk */
+    padding-bottom: 15px; 
+    
+    /* Eğer harfler üstten kesilirse bunu da açabilirsiniz */
+    padding-top: 10px;
         }
         #arabicOutputDisplay.empty::before { content: '...'; color: var(--color-text-secondary); font-weight: normal; font-size: 2rem; opacity: 0.8; }
         
@@ -547,7 +552,7 @@
 
              <div class="title-container">
                 <div class="title-text">
-                    <h2>اِخْـتِـبَـارُ  شَكْلِ الْحَرْفِ</h2>
+                    <h2>اِخْـتِـبـار  شَكْل الحَرْف</h2>
                 </div>
             </div>
 <div id="levelSelect" class="button-grid">
@@ -627,6 +632,7 @@
     </div>
 
    <script>
+
         // --- Web Audio API Ses Sistemi (Öncekiyle Aynı) ---
         let audioContext;
         let audioInitialized = false;
@@ -1850,9 +1856,12 @@
         const arabicOutputEl = document.getElementById('arabicOutputDisplay');
         const choiceBank = document.getElementById('choiceBank');
         
-        // YENİ: Tam Ekran Butonları
         const fullscreenBtnHome = document.getElementById('fullscreen-btn-home');
         const fullscreenBtnGame = document.getElementById('fullscreen-btn-game');
+
+        // --- YENİ: Yönerge Sesi Tanımlaması ---
+        const instructionAudio = new Audio('yonerge.wav');
+        let instructionPlayed = false;
 
         // --- Oyun Değişkenleri ---
         let selectedLevel = null;
@@ -1862,18 +1871,24 @@
         let currentWordIndex = 0;
         let currentStepIndex = 0;
         let gameActive = false;
-        let waitingForAudioClick = false;
         let audio = new Audio();
         
-
         // --- Ana Oyun Fonksiyonları ---
 
         levelSelect.addEventListener('click', (e) => {
-            if (e.target.classList.contains('level-btn')) {
+            // Tıklanan öğe veya ebeveyni .level-btn sınıfına sahip mi?
+            const btn = e.target.closest('.level-btn');
+            if (btn) {
+                // YAMA: Oyun başlayınca yönergeyi sustur
+                if(instructionAudio) { 
+                    instructionAudio.pause(); 
+                    instructionAudio.currentTime = 0; 
+                }
+
                 initAudioContext();
                 if (selectedLevelBtn) { selectedLevelBtn.classList.remove('selected'); }
-                selectedLevel = e.target.dataset.level;
-                selectedLevelBtn = e.target;
+                selectedLevel = btn.dataset.level;
+                selectedLevelBtn = btn;
                 selectedLevelBtn.classList.add('selected');
                 startGame();
             }
@@ -1898,7 +1913,7 @@
 
         function loadWord() {
             if (currentWordIndex >= levelWords.length) {
-                alert("Seviye Tamamlandı!");
+                alert("اِكْتَمَلَت المَرْحَلَة!");
                 showHomeScreen();
                 return;
             }
@@ -1909,34 +1924,32 @@
             arabicOutputEl.textContent = '';
             arabicOutputEl.classList.add('empty');
             choiceBank.innerHTML = '';
-            document.getElementById('arabicOutputContainer').scrollLeft = 2000;
+            // Scroll'u resetle
+            const outputContainer = document.getElementById('arabicOutputContainer');
+            if(outputContainer) outputContainer.scrollLeft = 2000;
+
             playAudioButton.disabled = false;
             loadAllSteps();
-        setTimeout(() => {
-        playWordAudio();
-    }, 500);
-    /* --------------------------- */
-}
+            
+            setTimeout(() => {
+                playWordAudio();
+            }, 500);
+        }
 
         function loadAllSteps() {
-            // .forEach() döngüsü, adımların (satırların) her zaman
-            // doğru sırada (0, 1, 2...) eklenmesini sağlar.
             currentWord.steps.forEach((stepData, index) => {
                 const row = document.createElement('div');
                 row.className = 'choice-row';
                 row.dataset.stepIndex = index; 
 
-                // İkili şıkları ortalamak için sınıfı ekle
                 if (stepData.options.length < 4) {
                     row.classList.add('choice-row-centered-options');
                 }
 
-                // Sadece ilk satırı (index === 0) 'active-step' olarak işaretle
                 if (index === 0) {
                     row.classList.add('active-step');
                 }
 
-                // Harf seçeneklerini (butonları) satır içinde karıştır
                 const shuffledOptions = [...stepData.options].sort(() => Math.random() - 0.5);
 
                 shuffledOptions.forEach(optionText => {
@@ -1949,28 +1962,16 @@
                     row.appendChild(btn);
                 });
                 
-                // Satırı doğrudan 'choiceBank'e ekle (karıştırma yok)
                 choiceBank.appendChild(row);
             });
         }
         
-        function disableAllChoiceBanks(disabled) {
-             choiceBank.querySelectorAll('.choice-btn').forEach(btn => {
-                btn.disabled = disabled;
-            });
-        }
-
         // --- Olay Dinleyicileri ---
 
         playAudioButton.addEventListener('click', () => {
-    initAudioContext();
-    if (!currentWord || !currentWord.audioSrc) return;
-    
-    // ESKİ KODUN TAMAMINI SİLİP SADECE ŞUNU YAZIN:
-    playWordAudio();
-    
-    // (Eski if(waitingForAudioClick)... bloklarına gerek kalmadı)
-});
+            initAudioContext();
+            playWordAudio();
+        });
 
         function playWordAudio() {
              if (!currentWord || !currentWord.audioSrc) return;
@@ -2020,19 +2021,15 @@
                 clickedRow.classList.remove('active-step');
 
                 currentStepIndex++; 
-if (currentStepIndex >= 3) {
-        const nextRow = choiceBank.querySelector(`.choice-row[data-step-index="${currentStepIndex}"]`);
-        
-        if (nextRow) {
-            // Yarım saniye bekleyip yumuşakça o satıra kaydır
-            setTimeout(() => {
-                nextRow.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' // Satırı ekranın tam ortasına getir
-                });
-            }, 100);
-        }
-    }
+                
+                if (currentStepIndex >= 3) {
+                    const nextRow = choiceBank.querySelector(`.choice-row[data-step-index="${currentStepIndex}"]`);
+                    if (nextRow) {
+                        setTimeout(() => {
+                            nextRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 100);
+                    }
+                }
 
                 if (currentStepIndex >= currentWord.steps.length) {
                     gameActive = false;
@@ -2055,16 +2052,20 @@ if (currentStepIndex >= 3) {
             }
         });
 
-
-        // GÜNCELLENDİ: Ana Menüye Dön (preventDefault eklendi)
         backToHomeButton.addEventListener('click', (e) => {
-            e.preventDefault(); // Linkin varsayılan eylemini engelle
+            e.preventDefault();
             showHomeScreen();
         });
 
         function showHomeScreen() {
             gameActive = false;
-            waitingForAudioClick = false;
+            if(instructionAudio) { 
+                instructionAudio.pause(); 
+                instructionAudio.currentTime = 0; 
+                // Ana ekrana dönünce tekrar çalması istenirse burası açılabilir:
+                // playInstruction(); 
+            }
+
             gameScreen.classList.remove('active');
             homeScreen.classList.add('active');
             
@@ -2075,11 +2076,11 @@ if (currentStepIndex >= 3) {
             selectedLevel = null;
         }
 
-        // --- YENİ: Tam Ekran Fonksiyonları ---
+        // --- Tam Ekran Fonksiyonları ---
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
-                    console.error(`Tam ekran modu etkinleştirilemedi: ${err.message} (${err.name})`);
+                    console.error(`Tam ekran hatası: ${err.message}`);
                 });
             } else {
                 if (document.exitFullscreen) {
@@ -2097,12 +2098,34 @@ if (currentStepIndex >= 3) {
         }
 
         document.addEventListener('fullscreenchange', updateFullscreenState);
-
-        // Tam ekran butonlarına tıklama olayı
         if(fullscreenBtnHome) fullscreenBtnHome.addEventListener('click', toggleFullScreen);
         if(fullscreenBtnGame) fullscreenBtnGame.addEventListener('click', toggleFullScreen);
-        // --- Bitiş: Tam Ekran Fonksiyonları ---
 
+        // --- YENİ: Yönerge Sesi Oynatma Fonksiyonu ---
+        function playInstruction() {
+            if(gameActive) return; // Oyun zaten açıksa çalma
+
+            // Önce doğrudan çalmayı dene
+            const playPromise = instructionAudio.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    instructionPlayed = true;
+                }).catch(error => {
+                    console.log("Otomatik oynatma engellendi, etkileşim bekleniyor.");
+                    // İzin verilmezse, ilk tıklamayı bekle
+                    document.body.addEventListener('click', function playOnFirstInteraction() {
+                        if (!instructionPlayed && !gameActive) {
+                            instructionAudio.play();
+                            instructionPlayed = true;
+                        }
+                    }, { once: true });
+                });
+            }
+        }
+
+        // Sayfa yüklendiğinde yönergeyi çalmayı dene
+        window.addEventListener('load', playInstruction);
     </script>
 </body>
 </html>
