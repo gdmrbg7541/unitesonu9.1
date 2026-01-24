@@ -589,6 +589,105 @@
             pointer-events: none;
         }
 
+/* --- YAMA: Sade Vurgu (Büyümeden) --- */
+
+/* 1. Sırası gelmeyen satırları grileştir ve dondur */
+.choice-row:not(.active-step) {
+    opacity: 0.4;              /* İyice şeffaflaşsın */
+    filter: grayscale(100%);   /* Renkleri tamamen gitsin (Siyah-beyaz olsun) */
+    pointer-events: none;      /* Tıklanması MÜMKÜN OLMASIN */
+    border: 2px solid transparent; /* Çerçeve yok */
+}
+
+/* 2. Sırası gelen satır normal ve net dursun */
+.choice-row.active-step {
+    opacity: 1 !important;     /* Tam netlik */
+    filter: none !important;   /* Renkleri canlı kalsın */
+    pointer-events: auto;      /* Tıklanabilir olsun */
+    transform: none !important; /* ASLA BÜYÜMESİN (Sabit boyut) */
+    
+    /* Etrafına "Ben buradayım" diyen turuncu bir çerçeve */
+    border: 3px solid var(--color-accent-1); 
+    border-radius: var(--border-radius-small);
+    
+    /* Hafif bir gölge (derinlik katmak için, boyut katmaz) */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
+    background-color: #ffffff; /* Arka planı temiz beyaz olsun */
+}
+
+/* 3. Aktif satırdaki butonların üzerine gelince tepki versin */
+.choice-row.active-step .choice-btn:hover:not(:disabled) {
+    background-color: var(--color-accent-1); /* Turuncu olsun */
+    color: white; /* Yazı beyaz olsun */
+    cursor: pointer;
+}
+/* --- YAMA: Dokunmatik Ekran (Mobil) Uyumluluğu --- */
+
+/* 1. PASİF SATIRLAR: Tamamen sönük ve dümdüz */
+.choice-row:not(.active-step) {
+    opacity: 0.3;
+    filter: grayscale(100%);
+    pointer-events: none; /* Tıklamayı engelle */
+    transform: scale(0.95); /* Biraz küçük dursun */
+    transition: all 0.5s ease;
+}
+
+/* 2. AKTİF SATIR: Canlı ve öne çıkmış */
+.choice-row.active-step {
+    opacity: 1 !important;
+    filter: none !important;
+    pointer-events: auto;
+    transform: scale(1);
+    background: transparent; /* Arka plan şeffaf kalsın */
+    border: none; /* Çerçeveyi kaldırdık, butonlar konuşsun */
+    padding: 10px 0; /* Butonlara yer aç */
+}
+
+/* 3. AKTİF BUTONLAR: 3 Boyutlu (Havada) Görünüm */
+.choice-row.active-step .choice-btn {
+    background-color: #ffffff;
+    color: var(--color-text-primary);
+    border: 2px solid #e0e0e0; /* İnce gri çerçeve */
+    
+    /* ÖNEMLİ: 3D Efekti veren alt gölge */
+    box-shadow: 0 8px 0 #c2d9f0, 0 15px 20px rgba(0,0,0,0.1);
+    
+    transform: translateY(0); /* Normal duruş */
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); /* Çok hızlı tepki ver */
+    
+    /* Mobil dokunma gecikmesini kaldır */
+    touch-action: manipulation; 
+    -webkit-tap-highlight-color: transparent; /* Gri tıklama arka planını kaldır */
+}
+
+/* 4. BASMA EFEKTİ (:active): Parmak dokunduğu an */
+.choice-row.active-step .choice-btn:active:not(:disabled) {
+    background-color: var(--color-accent-1) !important; /* Turuncu ol */
+    color: white !important;
+    border-color: var(--color-accent-1) !important;
+    
+    /* Gölgeyi yok et (içeri göçme hissi) */
+    box-shadow: 0 0 0 #c2d9f0, inset 0 3px 5px rgba(0,0,0,0.2) !important;
+    
+    /* Butonu fiziksel olarak aşağı it */
+    transform: translateY(8px) !important; 
+}
+
+/* 5. DOĞRU BİLİNEN BUTON (Basılı kalmış gibi dursun) */
+.choice-btn.correct-form {
+    background-color: transparent !important;
+    color: var(--color-correct) !important;
+    box-shadow: none !important; /* Gölge yok */
+    transform: translateY(8px) !important; /* Aşağıda kalsın */
+    border: 2px solid var(--color-correct) !important;
+    opacity: 1 !important;
+}
+
+/* 6. YANLIŞ BİLİNEN BUTON (Titreme) */
+.choice-btn.error-form {
+    transform: translateY(8px); /* Basılmış gibi */
+    box-shadow: none !important;
+}
     </style>
 </head>
 <body>
