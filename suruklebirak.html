@@ -37,10 +37,12 @@
             overflow: hidden;
             display: none; /* Başlangıçta gizli */
             flex-direction: column;
-            width: 90vw;
-            height: calc(90vw * 9 / 16); 
-            max-height: 90vh;
-            max-width: calc(90vh * 16 / 9);
+            
+            /* DEĞİŞİKLİK BURADA: %90 yerine %99 yapıldı */
+            width: 99vw;
+            height: calc(99vw * 9 / 16); 
+            max-height: 99vh;
+            max-width: calc(99vh * 16 / 9);
         }
         
         /* --- Geri Tuşu --- */
@@ -339,10 +341,11 @@
         /* --- Mobil Dikey Düzen (Portrait) --- */
         @media (orientation: portrait) {
             .activity-container {
-                width: 95vw;
-                height: calc(95vw * 16 / 9); 
-                max-height: 95vh;
-                max-width: calc(95vh * 9 / 16); 
+                /* DEĞİŞİKLİK BURADA: %95 yerine %99 yapıldı */
+                width: 99vw;
+                height: calc(99vw * 16 / 9); 
+                max-height: 99vh;
+                max-width: calc(99vh * 9 / 16); 
             }
             #start-screen h1 {
                 font-size: 3rem; 
@@ -669,7 +672,7 @@
          // --- Veri Bankası (Tenvinli - Dammatan Eklenmiş) ---
         const activityDataBank = [
             {
-                title: "صَنِّف الكَلِمات: شَمْسِيَّة أَمْ قَمَرِيَّة؟", 
+                title: "صَنِّف الكَلِمات‫.‬", 
                 categories: ["الحُروف الشَّمْسِيَّة", "الحُروف القَمَرِيَّة"], 
                 words: [
                     { w: "تَعَارُفٌ", cat: "الحُروف الشَّمْسِيَّة" },
@@ -741,15 +744,25 @@
             }
         }
 
+        
         // --- OYUN BAŞLATMA ---
         function startGame() {
             initAudioContext();
             startScreen.style.display = 'none';
             gameContainer.style.display = 'flex';
             loadActivity();
+            
             // Kontrol butonunu gizle (Otomatik kontrol yapacağız)
             document.getElementById('check-button').style.display = 'none'; 
             triggerFullscreen();
+
+            // --- YENİ EKLENEN KISIM: 0.6 Saniye Gecikmeli Ses ---
+            setTimeout(() => {
+                const audio = new Audio('yonergebirak.wav');
+                audio.play().catch(error => {
+                    console.warn("Ses otomatik oynatılamadı (Tarayıcı engeli olabilir):", error);
+                });
+            }, 600); // 600 milisaniye = 0.6 saniye
         }
 
         function triggerFullscreen() {

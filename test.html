@@ -581,7 +581,7 @@
             },
             // 8. Milliyet/Aidiyet (Türkiyeli)
             { 
-                q: "أَنَا مِنْ تُرْكِيا. أَنَا .......... .", 
+                q: "أَنا مِنْ تُرْكِيا. أَنا .......... .", 
                 o: ["تُرْكِيّ", "مِصْرِيّ", "سورِيّ", "عِراقِيّ", "فَرَنْسِيّ"], 
                 a: 0 
             },
@@ -617,7 +617,7 @@
             },
             // 14. Olumlu cevap (Evet)
             { 
-                q: "- هَلْ أَنْتَ طالِب؟ / - ..........، أَنَا طَالِب.", 
+                q: "- هَلْ أَنْتَ طالِب؟ / - ..........، أَنا طَالِب.", 
                 o: ["لا", "كَيْف", "نَعَم", "ما", "مَنْ"], 
                 a: 2 
             },
@@ -887,6 +887,7 @@
         }
         
         // --- BAŞLATMA FONKSİYONU ---
+        // --- BAŞLATMA FONKSİYONU ---
         function startActivity() {
             
             // 1. Tam Ekranı Talep Et
@@ -903,6 +904,16 @@
             // 3. Ses bağlamını başlat ve ses çal
             initAudioContext();
             playSound('touch');
+
+            // --- YENİ EKLENEN KISIM BAŞLANGIÇ ---
+            // 0.6 saniye (600ms) sonra ses dosyasını çal
+            setTimeout(function() {
+                var instructionAudio = new Audio('yonergetest.wav');
+                instructionAudio.play().catch(function(e) {
+                    console.log("Ses dosyası çalınamadı (Dosya ismi veya yolu hatalı olabilir):", e);
+                });
+            }, 600);
+            // --- YENİ EKLENEN KISIM BİTİŞ ---
 
             // 4. Oyunu Başlat
             prepareRounds();
