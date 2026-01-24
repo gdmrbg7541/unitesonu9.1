@@ -524,11 +524,77 @@
 .choice-btn, .key-button, .icon-button {
     -webkit-tap-highlight-color: transparent;
 }
+/* --- BAŞLANGIÇ EKRANI STİLLERİ (GÜNCELLENMİŞ) --- */
+        #startOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, #2d3142 0%, #1a1c29 100%);
+            z-index: 10000;
+            
+            /* --- MERKEZLEME KODLARI --- */
+            display: flex;            /* Esnek kutu modeli */
+            justify-content: center;  /* Yatayda (sağ-sol) tam orta */
+            align-items: center;      /* Dikeyde (yukarı-aşağı) tam orta */
+            /* ------------------------- */
+            
+            transition: opacity 0.5s ease;
+        }
+
+        #startButton {
+            font-family: var(--font-harmattan);
+            
+            /* --- DÜZELTME: Yazı boyutu küçültüldü --- */
+            font-size: 5.5rem;   /* 8rem'den 5.5rem'e düşürdük */
+            
+            font-weight: 700;
+            color: #ffffff;
+            background: var(--color-accent-1);
+            border: none;
+            border-radius: 50%;
+            
+            /* --- Buton Boyutları (Sabit) --- */
+            width: 15rem;
+            height: 15rem;
+            
+            cursor: pointer;
+            box-shadow: 0 0 0 10px rgba(243, 114, 44, 0.3);
+            animation: pulseBtn 2s infinite;
+            
+            /* --- ORTALAMA AYARLARI --- */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+            
+            /* Arapça harflerin dikey ortalaması için ince ayar */
+            line-height: 1; 
+            padding-bottom: 1rem; /* Yazıyı görsel olarak tam merkeze çeker */
+        }
+
+        #startButton:hover {
+            background: var(--color-accent-2);
+            transform: scale(1.05);
+        }
+
+        @keyframes pulseBtn {
+            0% { box-shadow: 0 0 0 0 rgba(243, 114, 44, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(243, 114, 44, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(243, 114, 44, 0); }
+        }
+
+        #startOverlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
 
     </style>
 </head>
 <body>
-
+<div id="startOverlay">
+        <button id="startButton">اِبْدَأْ</button>
+    </div>
     <div id="gameWrapper">
 
         <div id="homeScreen" class="screen active">
@@ -1859,10 +1925,13 @@
         const fullscreenBtnHome = document.getElementById('fullscreen-btn-home');
         const fullscreenBtnGame = document.getElementById('fullscreen-btn-game');
 
-        // --- YENİ: Yönerge Sesi Tanımlaması ---
-        const instructionAudio = new Audio('yonerge.wav');
-        let instructionPlayed = false;
+        // YENİ: Başlangıç Elemanları
+        const startOverlay = document.getElementById('startOverlay');
+        const startButton = document.getElementById('startButton');
 
+        // --- Yönerge Sesi ---
+        const instructionAudio = new Audio('yonerge.wav');
+        
         // --- Oyun Değişkenleri ---
         let selectedLevel = null;
         let selectedLevelBtn = null;
@@ -1873,17 +1942,34 @@
         let gameActive = false;
         let audio = new Audio();
         
+        // --- YENİ: Başlangıç Butonu Mantığı ---
+        startButton.addEventListener('click', () => {
+            // 1. Web Audio API kilidini aç
+            initAudioContext();
+
+            // 2. Tam ekrana geç (Kullanıcı tıkladığı için tarayıcı izin verir)
+            toggleFullScreen();
+
+            // 3. Perdeyi kaldır
+            startOverlay.classList.add('hidden');
+            setTimeout(() => {
+                startOverlay.style.display = 'none'; // Tamamen yok et
+            }, 500);
+
+            // 4. Çeyrek saniye (250ms) sonra yönerge sesini çal
+            setTimeout(() => {
+                instructionAudio.play().catch(e => console.log("Ses hatası:", e));
+            }, 250);
+        });
+
         // --- Ana Oyun Fonksiyonları ---
 
         levelSelect.addEventListener('click', (e) => {
-            // Tıklanan öğe veya ebeveyni .level-btn sınıfına sahip mi?
             const btn = e.target.closest('.level-btn');
             if (btn) {
-                // YAMA: Oyun başlayınca yönergeyi sustur
-                if(instructionAudio) { 
-                    instructionAudio.pause(); 
-                    instructionAudio.currentTime = 0; 
-                }
+                // Oyun başlayınca yönerge sesini sustur
+                instructionAudio.pause();
+                instructionAudio.currentTime = 0;
 
                 initAudioContext();
                 if (selectedLevelBtn) { selectedLevelBtn.classList.remove('selected'); }
@@ -1895,10 +1981,8 @@
         });
 
         function startGame() {
-            if (!gameData[selectedLevel] || !gameData[selectedLevel].words || gameData[selectedLevel].words.length === 0) {
-                console.error(`Oyun verisi bulunamadı! Seviye: ${selectedLevel}`);
-                if (selectedLevelBtn) { selectedLevelBtn.classList.remove('selected'); }
-                return;
+            if (!gameData[selectedLevel]) {
+                console.error("Veri yok"); return;
             }
             
             levelWords = [...gameData[selectedLevel].words].sort(() => Math.random() - 0.5);
@@ -1924,7 +2008,7 @@
             arabicOutputEl.textContent = '';
             arabicOutputEl.classList.add('empty');
             choiceBank.innerHTML = '';
-            // Scroll'u resetle
+            
             const outputContainer = document.getElementById('arabicOutputContainer');
             if(outputContainer) outputContainer.scrollLeft = 2000;
 
@@ -2059,12 +2143,8 @@
 
         function showHomeScreen() {
             gameActive = false;
-            if(instructionAudio) { 
-                instructionAudio.pause(); 
-                instructionAudio.currentTime = 0; 
-                // Ana ekrana dönünce tekrar çalması istenirse burası açılabilir:
-                // playInstruction(); 
-            }
+            instructionAudio.pause(); 
+            instructionAudio.currentTime = 0; 
 
             gameScreen.classList.remove('active');
             homeScreen.classList.add('active');
@@ -2080,7 +2160,7 @@
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
-                    console.error(`Tam ekran hatası: ${err.message}`);
+                    console.log("Tam ekran hatası veya iptali:", err);
                 });
             } else {
                 if (document.exitFullscreen) {
@@ -2100,32 +2180,6 @@
         document.addEventListener('fullscreenchange', updateFullscreenState);
         if(fullscreenBtnHome) fullscreenBtnHome.addEventListener('click', toggleFullScreen);
         if(fullscreenBtnGame) fullscreenBtnGame.addEventListener('click', toggleFullScreen);
-
-        // --- YENİ: Yönerge Sesi Oynatma Fonksiyonu ---
-        function playInstruction() {
-            if(gameActive) return; // Oyun zaten açıksa çalma
-
-            // Önce doğrudan çalmayı dene
-            const playPromise = instructionAudio.play();
-
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    instructionPlayed = true;
-                }).catch(error => {
-                    console.log("Otomatik oynatma engellendi, etkileşim bekleniyor.");
-                    // İzin verilmezse, ilk tıklamayı bekle
-                    document.body.addEventListener('click', function playOnFirstInteraction() {
-                        if (!instructionPlayed && !gameActive) {
-                            instructionAudio.play();
-                            instructionPlayed = true;
-                        }
-                    }, { once: true });
-                });
-            }
-        }
-
-        // Sayfa yüklendiğinde yönergeyi çalmayı dene
-        window.addEventListener('load', playInstruction);
     </script>
 </body>
 </html>
