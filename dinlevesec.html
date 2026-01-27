@@ -53,7 +53,38 @@
             left: 0;
             z-index: 9999;
         }
+/* 1. ARAKOM.TTF dosyasını sisteme tanıtıyoruz */
+    @font-face {
+        font-family: 'Arakom';
+        src: url('ARAKOM.TTF') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }
 
+    /* 2. Tanımladığımız fontu değişkenlere atıyoruz */
+    :root {
+        --font-poppins: 'Poppins', sans-serif;
+        
+        /* ÖNEMLİ: Arapça fontunu (Markazi Text) 'Arakom' ile değiştirdik */
+        --font-harmattan: 'Arakom', serif; 
+        
+        /* Diğer değişkenler aynen kalıyor */
+        --color-surface: #ffffff;
+        --color-shadow-light: #ffffff;
+        --color-shadow-dark: #c2d9f0;
+        --color-text-primary: #2d3142;
+        --color-text-secondary: #7b88a1;
+        --color-accent-1: #f3722c;
+        --color-accent-2: #f8961e;
+        --color-selected-bg: var(--color-accent-1);
+        --color-selected-text: #ffffff;
+        --color-correct: #90be6d;
+        --color-error: #f94144;
+        --color-correct-light: #edf7e7;
+        --color-error-light: #feeaea;
+        --border-radius-main: 1.2rem;
+        --border-radius-small: 0.8rem;
+    }
         #gameWrapper {
             width: 120rem; height: 67.5rem; position: relative;
             overflow: hidden; background: var(--color-bg);
